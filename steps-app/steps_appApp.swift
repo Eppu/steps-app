@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct steps_appApp: App {
+    @StateObject var manager = HealthManager()
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            StepsTabView()
+                .environmentObject(manager)
         }
     }
 }
