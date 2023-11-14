@@ -12,8 +12,11 @@ struct HomeView: View {
     var body: some View {
         VStack {
             LazyVGrid(columns: Array(repeating: GridItem(spacing: 20), count: 2)) {
-                ActivityCard(activity: Activity(id: 1, title: "Steps today", subtitle: "Something", image: "figure.walk", amount: "10,641"))
-                ActivityCard(activity: Activity(id: 1, title: "Steps today", subtitle: "Something", image: "figure.walk", amount: "7364"))
+                // TODO: Figure out how to mock HealthKit steps data for preview
+                ForEach(manager.activities.sorted(by: { $0.value.id < $1.value.id}), id: \.key) { item in
+                    ActivityCard(activity: item.value)
+                }
+//               ActivityCard(activity: Activity(id: 1, title: "Steps today", subtitle: "Something", image: "figure.walk", amount: "7364"))
             }.padding(.horizontal)
         }
     }
@@ -21,4 +24,5 @@ struct HomeView: View {
 
 #Preview {
     HomeView()
+        .environmentObject(HealthManager())
 }
