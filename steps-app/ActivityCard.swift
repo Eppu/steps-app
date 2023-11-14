@@ -7,7 +7,16 @@
 
 import SwiftUI
 
+struct Activity {
+    let id: Int
+    let title: String
+    let subtitle: String
+    let image: String
+    let amount: String
+}
+
 struct ActivityCard: View {
+    @State var activity: Activity
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 10)
@@ -16,15 +25,15 @@ struct ActivityCard: View {
             VStack {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text("Steps today").font(.system(size:16, weight: .bold))
+                        Text(activity.title).font(.system(size:16, weight: .bold))
                         
-                        Text("Something").font(.system(size: 12))
+                        Text(activity.subtitle).font(.system(size: 12))
                             .foregroundStyle(Color.gray)
                     }
                     Spacer()
-                    Image(systemName: "figure.walk").foregroundColor(.green)
+                    Image(systemName: activity.image).foregroundColor(.green)
                 }.padding()
-                Text("7364")
+                Text(activity.amount)
                     .font(.system(size: 24))
                 
                 
@@ -34,5 +43,5 @@ struct ActivityCard: View {
 }
 
 #Preview {
-    ActivityCard()
+    ActivityCard(activity: Activity(id: 1, title: "Steps today", subtitle: "Something", image: "figure.walk", amount: "7364"))
 }
