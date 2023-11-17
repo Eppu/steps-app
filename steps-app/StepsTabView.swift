@@ -24,6 +24,12 @@ struct StepsTabView: View {
                 .tabItem {
                     Label("Content", systemImage: "trophy")
                 }
+            
+            ProfileView()
+                .tag("Profile")
+                .tabItem {
+                    Label("Profile", systemImage: "person")
+                }
         }}
 }
 
