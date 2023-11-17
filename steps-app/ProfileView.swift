@@ -14,6 +14,8 @@ struct ProfileView: View {
         // Show the users basic information and a log out button
         VStack {
             Text("Logged in as: \(userManager.user?.email ?? "No user")")
+            // Show username
+            Text("Username: \(userManager.userName ?? "No username")")
             Button(action: { userManager.logout() }) {
                 Text("Logout")
             }
