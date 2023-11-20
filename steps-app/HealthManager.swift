@@ -7,6 +7,7 @@
 
 import Foundation
 import HealthKit
+import Firebase
 
 extension Date {
     static var startOfDay: Date {
@@ -30,6 +31,8 @@ class HealthManager: ObservableObject {
     
     @Published var activities: [String : Activity] = [:]
     
+    @Published var previousDaysSteps: [StepEntry] = []
+    
     init() {
         let steps = HKQuantityType(.stepCount)
         
@@ -38,8 +41,9 @@ class HealthManager: ObservableObject {
         Task {
             do {
                 try await healthStore.requestAuthorization(toShare: [], read: healthTypes)
-//                fetchTodaysSteps()
-                fetchMockSteps()
+                fetchTodaysSteps()
+                fetchPreviousDaysStepsFromDB()
+                //                fetchMockSteps()
             } catch {
                 print("Error fetching HealthKit data", error.localizedDescription)
             }
@@ -47,10 +51,13 @@ class HealthManager: ObservableObject {
     }
     
     func fetchMockSteps() {
+        print("Fetching mock steps")
         let activity = Activity(id: 0, title: "Steps today", subtitle: "Something", image: "figure.walk", amount: "7364")
         DispatchQueue.main.async {
             self.activities["todaySteps"] = activity
         }
+        // Store the step count
+        UserManager().saveOrUpdateStepEntry(stepCount: 7364)
     }
     
     func fetchTodaysSteps() {
@@ -71,9 +78,32 @@ class HealthManager: ObservableObject {
                 self.activities["todaySteps"] = activity
             }
             self.activities["todaySteps"] = activity
-            print (stepCount)
+            // Store the step count
+            print("Stepcount:", stepCount)
+            print(Int(stepCount))
+            if (stepCount > 0) {
+                UserManager().saveOrUpdateStepEntry(stepCount: stepCount)
+            }
         }
         
         healthStore.execute(query)
     }
+    
+    func fetchPreviousDaysStepsFromDB() {
+        print("fetching previous days steps from DB")
+        let userManager = UserManager()
+        
+        userManager.getStepEntriesForUser() { [weak self] (entries, error) in
+            if let error = error {
+                print("Error loading step entries: \(error.localizedDescription)")
+            } else if let entries = entries {
+                self?.previousDaysSteps = entries
+                print("Loaded step entries: \(entries)")
+            }
+        }
+        
+    }
+    
+    
+    
 }

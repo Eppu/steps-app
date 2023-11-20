@@ -8,6 +8,12 @@
 import Foundation
 import Firebase
 
+struct StepEntry: Codable, Hashable {
+    var userId: String
+    var date: Date
+    var stepCount: Int
+}
+
 class UserManager: ObservableObject {
     @Published var isLoggedIn: Bool = false
     @Published var user: User? = nil
@@ -15,6 +21,7 @@ class UserManager: ObservableObject {
     
     init() {
         Auth.auth().addStateDidChangeListener { (auth, user) in
+            print("Auth state changed")
             if let user = user {
                 self.isLoggedIn = true
                 self.user = user
@@ -28,6 +35,7 @@ class UserManager: ObservableObject {
                 //                    photoURL: \(user.photoURL?.absoluteString ?? "No photo URL")
                 //                    emailVerified: \(user.isEmailVerified)
                 //                    """)
+                
             } else {
                 self.isLoggedIn = false
                 self.user = nil
@@ -65,10 +73,8 @@ class UserManager: ObservableObject {
         
         profileRef.getDocument { (document, error) in
             if let document = document, document.exists {
-                print("Document data: \(document.data() ?? [:])")
                 if let userName = document["userName"] as? String {
                     self.userName = userName
-                    print("Username: \(userName)")
                 } else {
                     print("No username found, generating one")
                     // If the user does not have a username, generate a random one
@@ -83,10 +89,10 @@ class UserManager: ObservableObject {
     
     func updateUserName(_ newUserName: String) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-
+        
         let db = Firestore.firestore()
         let profilesRef = db.collection("profile")
-
+        
         // Check if the new username already exists
         profilesRef.whereField("userName", isEqualTo: newUserName).getDocuments { (snapshot, error) in
             if let error = error {
@@ -111,7 +117,7 @@ class UserManager: ObservableObject {
             }
         }
     }
-
+    
     
     func generateRandomUserName() -> String {
         // TODO: Use something more human readable
@@ -161,6 +167,91 @@ class UserManager: ObservableObject {
             }
         }
     }
+    
+    func getUser() -> User? {
+        return Auth.auth().currentUser
+    }
+    
+    func getUserName() -> String? {
+        return self.userName
+    }
+    
+    func getUserId() -> String? {
+        return self.user?.uid
+    }
+    
+    
+    // Saving or updating a step entry
+    func saveOrUpdateStepEntry(stepCount: Double) {
+        print ("Saving or updating step entry with step count", stepCount)
+        let db = Firestore.firestore()
+        let userId = Auth.auth().currentUser!.uid
+        
+        if userId.isEmpty {
+            print("No user is logged in")
+            return
+        }
+        
+        let date = Date.startOfDay
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd-MM-yyyy"
+        
+        let dateString = dateFormatter.string(from: date)
+        
+        print("datestring: \(dateString)")
+        let documentID = "\(userId)_\(dateString)"
+        
+        let stepEntryData: [String: Any] = [
+            "userId": userId,
+            "date": Timestamp(date: date),
+            "stepCount": stepCount
+        ]
+        
+        db.collection("steps").document(documentID).setData(stepEntryData, merge: true) { error in
+            if let error = error {
+                print("Error saving/updating step entry: \(error.localizedDescription)")
+            } else {
+                print("Step entry saved/updated successfully.")
+            }
+        }
+    }
+    
+    // Retrieving step entries for a specific user
+    func getStepEntriesForUser(completion: @escaping ([StepEntry]?, Error?) -> Void) {
+        let db = Firestore.firestore()
+        let userId = Auth.auth().currentUser!.uid
+        
+        if userId.isEmpty {
+            print("No user is logged in")
+            return
+        }
+        
+        print("Getting step entries for user with id: \(userId)")
+        
+        db.collection("steps")
+            .whereField("userId", isEqualTo: userId)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    completion(nil, error)
+                    return
+                }
+                
+                var stepEntries: [StepEntry] = []
+                
+                for document in snapshot!.documents {
+                    if let stepEntry = try? document.data(as: StepEntry.self) {
+                        stepEntries.append(stepEntry)
+                    }
+                }
+                
+                print("Got step entries: \(stepEntries)")
+                
+                completion(stepEntries, nil)
+            }
+    }
+    
+    
 }
 
 

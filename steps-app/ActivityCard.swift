@@ -26,9 +26,10 @@ struct ActivityCard: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 5) {
                         Text(activity.title).font(.system(size:16, weight: .bold))
-                        
-                        Text(activity.subtitle).font(.system(size: 12))
-                            .foregroundStyle(Color.gray)
+                        if(activity.subtitle != "") {
+                            Text(activity.subtitle).font(.system(size: 12))
+                                .foregroundStyle(Color.gray)
+                        }
                     }
                     Spacer()
                     Image(systemName: activity.image).foregroundColor(.green)
@@ -43,5 +44,5 @@ struct ActivityCard: View {
 }
 
 #Preview {
-    ActivityCard(activity: Activity(id: 1, title: "Steps today", subtitle: "Something", image: "figure.walk", amount: "7364"))
+    ActivityCard(activity: Activity(id: 0, title: "Steps today", subtitle: "Something", image: "figure.walk", amount: "7364"))
 }
