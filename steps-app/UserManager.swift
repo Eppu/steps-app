@@ -18,6 +18,7 @@ class UserManager: ObservableObject {
     @Published var isLoggedIn: Bool = false
     @Published var user: User? = nil
     @Published var userName: String? = nil
+    @Published var userCountry: String? = nil
     
     init() {
         Auth.auth().addStateDidChangeListener { (auth, user) in
@@ -26,6 +27,7 @@ class UserManager: ObservableObject {
                 self.isLoggedIn = true
                 self.user = user
                 self.loadUserName()
+                self.loadUserCountry()
                 // Print all the properties of the user
                 //                print("""
                 //                    User properties:
@@ -40,6 +42,7 @@ class UserManager: ObservableObject {
                 self.isLoggedIn = false
                 self.user = nil
                 self.userName = nil
+                self.userCountry = nil
             }
         }
     }
@@ -83,6 +86,49 @@ class UserManager: ObservableObject {
                 }
             } else {
                 print("Error fetching user profile: \(error?.localizedDescription ?? "Unknown error")")
+            }
+        }
+    }
+    
+    func loadUserCountry() {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            print("No user is logged in")
+            return
+        }
+        
+        print("Loading user country")
+        let db = Firestore.firestore()
+        let profileRef = db.collection("profile").document(uid)  // Use the correct collection name
+        
+        print("Got profile ref for uid: \(uid))")
+        print("ProfileRef", profileRef)
+        
+        profileRef.getDocument { (document, error) in
+            if let document = document, document.exists {
+                if let userCountry = document["userCountry"] as? String {
+                    self.userCountry = userCountry
+                } else {
+                    print("No user country found")
+                }
+            } else {
+                print("Error fetching user profile: \(error?.localizedDescription ?? "Unknown error")")
+            }
+        }
+    }
+    
+    func updateUserCountry (_ newUserCountry: String) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        let db = Firestore.firestore()
+        let profilesRef = db.collection("profile")
+        
+        let profileRef = db.collection("profile").document(uid)
+        profileRef.setData(["userCountry": newUserCountry], merge: true) { error in
+            if let error = error {
+                print("Error updating user country: \(error.localizedDescription)")
+            } else {
+                self.userCountry = newUserCountry
+                print("User country updated successfully to \(newUserCountry)")
             }
         }
     }
