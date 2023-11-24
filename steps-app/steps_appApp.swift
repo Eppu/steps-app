@@ -27,20 +27,24 @@ struct steps_appApp: App {
     @StateObject var userManager = UserManager()
     @StateObject var manager = HealthManager()
     
-    
     var body: some Scene {
         WindowGroup {
-            NavigationView {
+            // Could also use NavigationView here
+            ZStack {
                 if userManager.isLoggedIn {
                     // If the user is logged in, show StepsTabView
                     StepsTabView()
                         .environmentObject(manager)
+                        .transition(.opacity)
+                  
                 } else {
                     // If the user is not logged in, show LoginView
                     LoginView()
                         .environmentObject(userManager)
+                        .transition(.move(edge: .bottom))
+                        
                 }
-            }
+            }.animation(.default, value: userManager.isLoggedIn)
         }
     }
 }
