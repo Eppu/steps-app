@@ -42,7 +42,10 @@ class HealthManager: ObservableObject {
             do {
                 try await healthStore.requestAuthorization(toShare: [], read: healthTypes)
                 fetchTodaysSteps()
-                fetchPreviousDaysStepsFromDB()
+                if (Auth.auth().currentUser != nil) {
+                    // fetch previous days steps from DB
+                    fetchPreviousDaysStepsFromDB()
+                }
                 //                fetchMockSteps()
             } catch {
                 print("Error fetching HealthKit data", error.localizedDescription)

@@ -35,9 +35,14 @@ struct HomeView: View {
                     }
                 }.padding(.horizontal)
             }
-        }
+        }.onAppear(
+            perform: {
+                if(manager.previousDaysSteps.isEmpty) {
+                    manager.fetchPreviousDaysStepsFromDB()
+                }
+            }
+        )
     }
-    
 }
 
 #Preview {
